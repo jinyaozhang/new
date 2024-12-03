@@ -2,9 +2,9 @@
 import numpy as np
 import scipy.io as sio
 
-from utils import propagate_as
-from utils import propagate_as_tf
+from utils import propagate_as, propagate_as_tf, ensure_that_even
 import matplotlib.pyplot as plt
+from rectangular_crop import RoiRect
 
 import tensorflow as tf
 
@@ -54,16 +54,26 @@ if __name__ == '__main__':
         M = 3672
         N = 5496
 
-        filename = "cheek_cells1.mat"
+        filename = "cheek_cells.mat"
         if not filename:
             raise Exception
         data = sio.loadmat(filename)  # 将这个文件加载为一个字典
 
         i = data['OH']
 
-        amp_1 = i[:, :, 0]
-        amp_2 = i[:, :, 5]
+        # Select region of interest (ROI).
+        plt.imshow(i[:,:,0], interpolation='nearest', cmap="Greys")
+        plt.colorbar()
+        plt.title("ROI selection; left click: line segment, right click: close region")
+        roi = RoiRect(roicolor='r')
+        pos = roi.get_extents() # (xmin, xmax, ymin, ymax)
+        M = ensure_that_even(pos[1]-pos[0])
+        N = ensure_that_even(pos[3]-pos[2])
+        amp_1 = i[pos[2]:pos[2]+N, pos[0]:pos[0]+M, 0]
+        amp_2 = i[pos[2]:pos[2]+N, pos[0]:pos[0]+M, 5]
         phase1 = np.angle(amp_1)
+
+
     ####################################################################################################################
     # The actual forward model
     ####################################################################################################################
@@ -232,4 +242,10 @@ if __name__ == '__main__':
     im3 = ax3.imshow(ph0_est)
     ax3.set_title("Predicted phase at z0")
     fig1.colorbar(im3, ax=ax3)
+
+    fig2, ax20 = plt.subplots(1, 1, figsize=(15, 8))
+    im20 = ax20.imshow(ph0_est)
+    ax20.set_title("Predicted phase at z0")
+    fig2.colorbar(im20, ax=ax20)
     plt.show()
+

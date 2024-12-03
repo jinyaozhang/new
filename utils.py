@@ -86,3 +86,8 @@ def propagate_as_tf(ui, z, wavelength, n0, sampling):
             uo = tf.math.conj(uo)
 
         return uo
+
+
+def ensure_that_even(input):
+    assert isinstance(input, int)
+    return input-input % 2
